@@ -72,26 +72,15 @@ sudo docker stack deploy -c docker-compose.yml [nama_container]
 ```
 server {
     listen 80;
-    server_name openkm.your-domain.com; 
-    # Avoid checking files size #
-    client_max_body_size 0;
+    server_name agoy.local.test;
 
-    rewrite ^/$ /openkm permanent;
-    
-    location /openkm/frontend/webSocket {
-        proxy_pass http://localhost:8080/openkm/frontend/webSocket;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+    location / {
+        proxy_pass http://192.168.2.100:8000;
+
         proxy_set_header Host $host;
-    }
-    
-    location /openkm {
-         proxy_set_header Host $host;
-         proxy_set_header X-Forwarded-Host $host;
-         proxy_set_header X-Forwarded-Server $host;
-         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-         proxy_pass http://localhost:8080/openkm;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 ```

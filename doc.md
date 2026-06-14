@@ -72,24 +72,26 @@ sudo docker stack deploy -c docker-compose.yml [nama_container]
 ```
 server {
     listen 80;
-    server_name _; # Menggunakan '_' berarti menerima akses dari IP server langsung
+    server_name openkm.your-domain.com; 
+    # Avoid checking files size #
+    client_max_body_size 0;
 
-    root /var/www/html/slims;
-    index index.php index.html index.htm;
-
-    charset utf-8;
-
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
+    rewrite ^/$ /openkm permanent;
+    
+    location /openkm/frontend/webSocket {
+        proxy_pass http://localhost:8080/openkm/frontend/webSocket;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
     }
-
-    # Teruskan file PHP ke PHP-FPM socket bawaan Arch Linux
-    location ~ \.php$ {
-        include fastcgi_params;
-        fastcgi_pass unix:/run/php-fpm/php-fpm.sock;
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    
+    location /openkm {
+         proxy_set_header Host $host;
+         proxy_set_header X-Forwarded-Host $host;
+         proxy_set_header X-Forwarded-Server $host;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+         proxy_pass http://localhost:8080/openkm;
     }
-
 }
 ```
